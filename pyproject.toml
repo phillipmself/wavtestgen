@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wavtestgen"
+version = "0.1.0"
+description = "Generate WAV test tones from JSON segment configurations."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["numpy>=1.26"]
+
+[project.scripts]
+wavtestgen = "wavtestgen.render:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wavtestgen*"]
+

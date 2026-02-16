@@ -1,0 +1,43 @@
+{
+  "sample_rate": 48000,
+  "bit_depth": 24,
+  "channels": 2,
+  "seed": 1234,
+  "fade_ms": 1.0,
+  "min_sweep_freq_hz": 1.0,
+  "segments": [
+    {
+      "type": "sweep",
+      "duration_s": 2.0,
+      "start_hz": 0,
+      "end_hz": 20000,
+      "level_dbfs": -3.0,
+      "curve": "log"
+    },
+    {
+      "type": "sweep",
+      "duration_s": 2.0,
+      "start_hz": 5,
+      "end_hz": 100,
+      "level_dbfs": -6.0,
+      "curve": "linear"
+    },
+    {
+      "type": "silence",
+      "duration_s": 0.5
+    },
+    {
+      "type": "impulses",
+      "duration_s": 1.0,
+      "times_s": [0.1, 0.5, 0.9],
+      "level_dbfs": -4.5,
+      "polarity": "positive"
+    },
+    {
+      "type": "noise",
+      "duration_s": 1.0,
+      "color": "pink",
+      "level_dbfs": -4.5
+    }
+  ]
+}
