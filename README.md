@@ -54,7 +54,7 @@ Segment types:
 
 ### Example
 
-See `/Users/phillipself/dev/audio/sweeper/examples/example_config.json`.
+See [`examples/example_config.json`](examples/example_config.json).
 
 ## Python API
 

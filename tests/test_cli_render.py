@@ -7,7 +7,7 @@ import wave
 from pathlib import Path
 
 
-WORKDIR = Path("/Users/phillipself/dev/audio/sweeper")
+WORKDIR = Path(__file__).resolve().parents[1]
 
 
 class CliRenderTests(unittest.TestCase):
@@ -84,4 +84,3 @@ class CliRenderTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
