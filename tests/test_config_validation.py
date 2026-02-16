@@ -74,6 +74,60 @@ class ConfigValidationTests(unittest.TestCase):
         with self.assertRaises(ConfigError):
             normalize_config(raw)
 
+    def test_noise_can_use_start_and_end_dbfs(self):
+        raw = {
+            "sample_rate": 48000,
+            "bit_depth": 24,
+            "segments": [
+                {
+                    "type": "noise",
+                    "duration_s": 1.0,
+                    "color": "pink",
+                    "start_dbfs": -30.0,
+                    "end_dbfs": -6.0,
+                }
+            ],
+        }
+        cfg, _ = normalize_config(raw)
+        seg = cfg["segments"][0]
+        self.assertEqual(seg["start_dbfs"], -30.0)
+        self.assertEqual(seg["end_dbfs"], -6.0)
+        self.assertNotIn("level_dbfs", seg)
+
+    def test_noise_rejects_mixed_constant_and_ramp_dbfs(self):
+        raw = {
+            "sample_rate": 48000,
+            "bit_depth": 24,
+            "segments": [
+                {
+                    "type": "noise",
+                    "duration_s": 1.0,
+                    "color": "white",
+                    "level_dbfs": -6.0,
+                    "start_dbfs": -12.0,
+                    "end_dbfs": -3.0,
+                }
+            ],
+        }
+        with self.assertRaises(ConfigError):
+            normalize_config(raw)
+
+    def test_noise_requires_complete_dbfs_definition(self):
+        raw = {
+            "sample_rate": 48000,
+            "bit_depth": 24,
+            "segments": [
+                {
+                    "type": "noise",
+                    "duration_s": 1.0,
+                    "color": "brown",
+                    "start_dbfs": -12.0,
+                }
+            ],
+        }
+        with self.assertRaises(ConfigError):
+            normalize_config(raw)
+
 
 if __name__ == "__main__":
     unittest.main()

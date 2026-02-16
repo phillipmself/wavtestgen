@@ -37,7 +37,8 @@
       "type": "noise",
       "duration_s": 1.0,
       "color": "pink",
-      "level_dbfs": -4.5
+      "start_dbfs": -12.0,
+      "end_dbfs": -4.5
     }
   ]
 }

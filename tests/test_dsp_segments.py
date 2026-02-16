@@ -50,6 +50,28 @@ class DspSegmentTests(unittest.TestCase):
         b = render_timeline(cfg, rng=np.random.default_rng(cfg["seed"]))
         self.assertTrue(np.array_equal(a, b))
 
+    def test_noise_dbfs_ramp_increases_level_over_time(self):
+        raw = {
+            "sample_rate": 8000,
+            "bit_depth": 16,
+            "fade_ms": 0.0,
+            "seed": 123,
+            "segments": [
+                {
+                    "type": "noise",
+                    "duration_s": 1.0,
+                    "color": "white",
+                    "start_dbfs": -30.0,
+                    "end_dbfs": -3.0,
+                }
+            ],
+        }
+        cfg, _ = normalize_config(raw)
+        sig = render_timeline(cfg, rng=np.random.default_rng(cfg["seed"]))
+        first_peak = float(np.max(np.abs(sig[:2000])))
+        last_peak = float(np.max(np.abs(sig[-2000:])))
+        self.assertGreater(last_peak, first_peak)
+
     def test_mixed_timeline_length_matches_expected_samples(self):
         raw = {
             "sample_rate": 48000,
@@ -74,4 +96,3 @@ class DspSegmentTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

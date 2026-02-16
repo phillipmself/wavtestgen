@@ -115,7 +115,7 @@ def _normalize_segment(
         start_hz = _require_float(segment, "start_hz", index)
         end_hz = _require_float(segment, "end_hz", index)
         level_dbfs = _require_float(segment, "level_dbfs", index)
-        _validate_dbfs(level_dbfs, index)
+        _validate_dbfs(level_dbfs, index, "level_dbfs")
 
         if start_hz < 0 or end_hz < 0:
             raise ConfigError(f"segments[{index}] sweep frequencies must be >= 0.")
@@ -150,17 +150,47 @@ def _normalize_segment(
             raise ConfigError(
                 f"segments[{index}].color must be one of {sorted(SUPPORTED_NOISE_COLORS)}."
             )
-        level_dbfs = _require_float(segment, "level_dbfs", index)
-        _validate_dbfs(level_dbfs, index)
+
+        has_level = "level_dbfs" in segment
+        has_start = "start_dbfs" in segment
+        has_end = "end_dbfs" in segment
+
+        if has_level and (has_start or has_end):
+            raise ConfigError(
+                f"segments[{index}] noise must use either level_dbfs or "
+                "start_dbfs/end_dbfs, not both."
+            )
+
+        if has_level:
+            level_dbfs = _require_float(segment, "level_dbfs", index)
+            _validate_dbfs(level_dbfs, index, "level_dbfs")
+            return {
+                "type": "noise",
+                "duration_s": duration_s,
+                "color": color,
+                "level_dbfs": level_dbfs,
+            }
+
+        if not (has_start and has_end):
+            raise ConfigError(
+                f"segments[{index}] noise must provide either level_dbfs or "
+                "both start_dbfs and end_dbfs."
+            )
+
+        start_dbfs = _require_float(segment, "start_dbfs", index)
+        end_dbfs = _require_float(segment, "end_dbfs", index)
+        _validate_dbfs(start_dbfs, index, "start_dbfs")
+        _validate_dbfs(end_dbfs, index, "end_dbfs")
         return {
             "type": "noise",
             "duration_s": duration_s,
             "color": color,
-            "level_dbfs": level_dbfs,
+            "start_dbfs": start_dbfs,
+            "end_dbfs": end_dbfs,
         }
 
     level_dbfs = _require_float(segment, "level_dbfs", index)
-    _validate_dbfs(level_dbfs, index)
+    _validate_dbfs(level_dbfs, index, "level_dbfs")
     polarity = segment.get("polarity", "positive")
     if polarity not in SUPPORTED_IMPULSE_POLARITY:
         raise ConfigError(
@@ -197,9 +227,9 @@ def _normalize_segment(
     }
 
 
-def _validate_dbfs(level_dbfs: float, index: int) -> None:
+def _validate_dbfs(level_dbfs: float, index: int, field_name: str) -> None:
     if level_dbfs > 0:
-        raise ConfigError(f"segments[{index}].level_dbfs must be <= 0.")
+        raise ConfigError(f"segments[{index}].{field_name} must be <= 0.")
 
 
 def _require_int(cfg: dict[str, Any], key: str) -> int:

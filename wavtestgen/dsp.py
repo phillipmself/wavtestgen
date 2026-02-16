@@ -82,17 +82,24 @@ def generate_noise(
     duration_s: float,
     sample_rate: int,
     color: str,
-    level_dbfs: float,
+    start_dbfs: float,
+    end_dbfs: float,
     rng: np.random.Generator,
 ) -> np.ndarray:
-    """Generate white/pink/brown noise with FFT-domain spectral shaping."""
+    """Generate white/pink/brown noise with optional dBFS ramping."""
     count = sample_count(duration_s, sample_rate)
     base = rng.standard_normal(count)
     if color == "white":
         shaped = base
     else:
         shaped = _shape_noise_fft(base, sample_rate, color)
-    return _normalize_peak(shaped, dbfs_to_amplitude(level_dbfs))
+    unit_peak = _normalize_peak(shaped, 1.0)
+    if start_dbfs == end_dbfs:
+        return unit_peak * dbfs_to_amplitude(start_dbfs)
+
+    envelope_dbfs = np.linspace(start_dbfs, end_dbfs, count, dtype=np.float64)
+    envelope_amp = np.power(10.0, envelope_dbfs / 20.0)
+    return unit_peak * envelope_amp
 
 
 def _shape_noise_fft(noise: np.ndarray, sample_rate: int, color: str) -> np.ndarray:
@@ -167,11 +174,18 @@ def render_segment(
         return apply_fade(sweep, sample_rate=sample_rate, fade_ms=fade_ms)
 
     if seg_type == "noise":
+        if "level_dbfs" in segment:
+            start_dbfs = segment["level_dbfs"]
+            end_dbfs = segment["level_dbfs"]
+        else:
+            start_dbfs = segment["start_dbfs"]
+            end_dbfs = segment["end_dbfs"]
         noise = generate_noise(
             duration_s=segment["duration_s"],
             sample_rate=sample_rate,
             color=segment["color"],
-            level_dbfs=segment["level_dbfs"],
+            start_dbfs=start_dbfs,
+            end_dbfs=end_dbfs,
             rng=rng,
         )
         return apply_fade(noise, sample_rate=sample_rate, fade_ms=fade_ms)
@@ -213,4 +227,3 @@ def to_channel_matrix(mono: np.ndarray, channels: int) -> np.ndarray:
     if channels == 2:
         return np.column_stack((mono, mono))
     raise ValueError("channels must be 1 or 2.")
-

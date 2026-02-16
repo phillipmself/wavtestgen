@@ -48,7 +48,9 @@ Top-level fields:
 Segment types:
 
 - `sweep`: `duration_s`, `start_hz`, `end_hz`, `level_dbfs`, optional `curve`
-- `noise`: `duration_s`, `color`, `level_dbfs`
+- `noise`: `duration_s`, `color`, and either:
+  - `level_dbfs` (constant level), or
+  - `start_dbfs` + `end_dbfs` (linear dB ramp across segment)
 - `silence`: `duration_s`
 - `impulses`: `duration_s`, `times_s`, `level_dbfs`, optional `polarity`
 
