@@ -10,7 +10,7 @@ JSON configs.
   - `sweep` (linear or log)
   - `noise` (white, pink, brown)
   - `silence`
-  - `impulses` (single-sample spikes at explicit times)
+  - `impulses` (single-sample spikes at explicit or auto-generated spacing)
 - Peak-referenced dBFS levels
 - Optional deterministic noise with `seed`
 - Mono output or dual-mono stereo duplication
@@ -52,7 +52,10 @@ Segment types:
   - `level_dbfs` (constant level), or
   - `start_dbfs` + `end_dbfs` (linear dB ramp across segment)
 - `silence`: `duration_s`
-- `impulses`: `duration_s`, `times_s`, `level_dbfs`, optional `polarity`
+- `impulses`: `duration_s`, and either:
+  - `times_s` (explicit impulse times), or
+  - `count` with optional `window_start_s`/`window_end_s` for even spacing
+  - Plus either `level_dbfs` (constant level) or `start_dbfs` + `end_dbfs` (impulse-by-impulse ramp), and optional `polarity`
 
 ### Example
 

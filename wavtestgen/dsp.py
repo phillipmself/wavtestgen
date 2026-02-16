@@ -135,20 +135,19 @@ def generate_impulses(
     duration_s: float,
     sample_rate: int,
     times_s: list[float],
-    level_dbfs: float,
+    levels_dbfs: list[float],
     polarity: str,
 ) -> np.ndarray:
     """Generate a sparse impulse train with single-sample impulses."""
     count = sample_count(duration_s, sample_rate)
     out = np.zeros(count, dtype=np.float64)
-    amplitude = dbfs_to_amplitude(level_dbfs)
-    if polarity == "negative":
-        amplitude = -amplitude
+    polarity_sign = -1.0 if polarity == "negative" else 1.0
 
-    for time_s in times_s:
+    for time_s, level_dbfs in zip(times_s, levels_dbfs):
         index = int(round(time_s * sample_rate))
         if index >= count:
             index = count - 1
+        amplitude = dbfs_to_amplitude(level_dbfs) * polarity_sign
         out[index] = amplitude
     return out
 
@@ -194,11 +193,20 @@ def render_segment(
         return generate_silence(duration_s=segment["duration_s"], sample_rate=sample_rate)
 
     if seg_type == "impulses":
+        times_s = segment["times_s"]
+        if "level_dbfs" in segment:
+            levels_dbfs = [segment["level_dbfs"]] * len(times_s)
+        else:
+            start_dbfs = segment["start_dbfs"]
+            end_dbfs = segment["end_dbfs"]
+            levels_dbfs = np.linspace(
+                start_dbfs, end_dbfs, num=len(times_s), dtype=np.float64
+            ).tolist()
         return generate_impulses(
             duration_s=segment["duration_s"],
             sample_rate=sample_rate,
-            times_s=segment["times_s"],
-            level_dbfs=segment["level_dbfs"],
+            times_s=times_s,
+            levels_dbfs=levels_dbfs,
             polarity=segment["polarity"],
         )
 

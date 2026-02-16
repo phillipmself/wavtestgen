@@ -38,6 +38,48 @@ class DspSegmentTests(unittest.TestCase):
             self.assertAlmostEqual(sig[idx], expected, places=12)
         self.assertEqual(int(np.count_nonzero(sig)), 3)
 
+    def test_impulse_count_mode_evenly_spreads_over_window(self):
+        raw = {
+            "sample_rate": 1000,
+            "bit_depth": 16,
+            "segments": [
+                {
+                    "type": "impulses",
+                    "duration_s": 1.0,
+                    "count": 5,
+                    "window_start_s": 0.1,
+                    "window_end_s": 0.5,
+                    "level_dbfs": -6.0,
+                }
+            ],
+        }
+        cfg, _ = normalize_config(raw)
+        sig = render_timeline(cfg, rng=np.random.default_rng(0))
+        expected = dbfs_to_amplitude(-6.0)
+        for idx in (100, 200, 300, 400, 500):
+            self.assertAlmostEqual(sig[idx], expected, places=12)
+        self.assertEqual(int(np.count_nonzero(sig)), 5)
+
+    def test_impulse_dbfs_ramp_applies_per_impulse(self):
+        raw = {
+            "sample_rate": 1000,
+            "bit_depth": 16,
+            "segments": [
+                {
+                    "type": "impulses",
+                    "duration_s": 1.0,
+                    "times_s": [0.1, 0.2, 0.3],
+                    "start_dbfs": -20.0,
+                    "end_dbfs": -6.0,
+                }
+            ],
+        }
+        cfg, _ = normalize_config(raw)
+        sig = render_timeline(cfg, rng=np.random.default_rng(0))
+        expected_dbfs = [-20.0, -13.0, -6.0]
+        for idx, dbfs in zip((100, 200, 300), expected_dbfs):
+            self.assertAlmostEqual(sig[idx], dbfs_to_amplitude(dbfs), places=12)
+
     def test_noise_is_deterministic_with_seed(self):
         raw = {
             "sample_rate": 8000,
